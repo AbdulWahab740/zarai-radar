@@ -1,0 +1,11 @@
+.env 
+.env.example
+/zarai_env
+test_orchestrator.py
+/RAG/.env
+/App/services/.env
+/App/routes/.env
+/RAG/__pycache__
+/App/__pycache__
+/agri-tech
+/RAG/data
