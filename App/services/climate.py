@@ -2,22 +2,19 @@ import requests
 import datetime
 from dotenv import load_dotenv
 import os
-# from App.schema.climate import ClimateData
+from schema.climate import ClimateData
+import requests
+import datetime
 from fastapi import HTTPException
 from pydantic import BaseModel
+from typing import List
+from pathlib import Path
 
-class ClimateData(BaseModel):
-    """Climate data for a given datetime"""
-    temp_c: float
-    humidity: int
-    wind_kph: float
-    chance_of_rain: int
-    condition: str
-    datetime: str
-load_dotenv()
+env_path = Path(__file__).resolve().parent / "services" / ".env"  # adjust if needed
 
-# OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
-OPENWEATHER_API_KEY = 'd4882fbbc373398cc80603262290fdeb'
+load_dotenv(dotenv_path=env_path)
+
+
 # Coordinates (lat, lon) for farmer districts – same cities as in setup
 DISTRICT_COORDINATES = {
     # Punjab
@@ -57,27 +54,20 @@ def get_lat_lon_for_district(district: str) -> tuple[float, float]:
         detail=f"Coordinates not defined for district: {district}. Supported: {list(DISTRICT_COORDINATES.keys())}",
     )
 
-import requests
-import datetime
-from fastapi import HTTPException
-from pydantic import BaseModel
-from typing import List
-
-
-class ClimateData(BaseModel):
-    """Climate data for a given datetime"""
-    datetime: str
-    temp_c: float
-    humidity: int
-    wind_kph: float
-    chance_of_rain: int
-    condition: str
-
 
 def get_climate_data(lat: float, lon: float) -> List[ClimateData]:
     """
     Fetch current-hour climate data using Open-Meteo (free, no API key)
     """
+    
+    OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+    if not OPENWEATHER_API_KEY:
+        raise HTTPException(status_code=500, detail="OpenWeather API key not configured")
+
+    current_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric"
+    current_data = requests.get(current_url).json()
+
+    humidity_now = current_data["main"]["humidity"] 
 
     url = (
         "https://api.open-meteo.com/v1/forecast"
@@ -101,16 +91,14 @@ def get_climate_data(lat: float, lon: float) -> List[ClimateData]:
 
     now = datetime.datetime.now()
     current_hour_str = now.strftime("%Y-%m-%dT%H:00")
-
     records = []
-
     for i, time_str in enumerate(times):
         if time_str == current_hour_str:
             records.append(
                 ClimateData(
                     datetime=time_str,
                     temp_c=hourly["temperature_2m"][i],
-                    humidity=hourly["relative_humidity_2m"][i],
+                    humidity=humidity_now,
                     wind_kph=hourly["wind_speed_10m"][i],
                     chance_of_rain=hourly["precipitation_probability"][i],
                     condition="Derived from precipitation probability"
@@ -126,6 +114,43 @@ def get_climate_data(lat: float, lon: float) -> List[ClimateData]:
 
     return records
 
+def get_weekly_weather(lat, lon):
+    """
+    Fetch 7-day weather forecast using Open-Meteo
+    """
 
+    url = "https://api.open-meteo.com/v1/forecast"
+
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "daily": [
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_sum",
+            "relative_humidity_2m_mean"
+        ],
+        "timezone": "auto"
+    }
+
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+
+    data = response.json()
+    daily = data["daily"]
+
+    weekly_weather = []
+
+    for i in range(len(daily["time"])):
+
+        weekly_weather.append({
+            "date": daily["time"][i],
+            "temp_max": daily["temperature_2m_max"][i],
+            "temp_min": daily["temperature_2m_min"][i],
+            "rain_mm": daily["precipitation_sum"][i],
+            "humidity": daily["relative_humidity_2m_mean"][i]
+        })
+
+    return weekly_weather
 if __name__ == "__main__":
     print(get_climate_data(30.1978, 71.4711))

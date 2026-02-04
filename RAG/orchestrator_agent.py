@@ -1,5 +1,5 @@
 # orchestrator_agent.py
-# Agentic ReAct flow with reasoning, adaptive tool use, and PostgreSQL conversation history
+# Agentic ReAct flow with reasoning, adaptive tool use, and Supabase-backed conversation history
 # Agent reasons about queries, decides which tools to call, and maintains conversation memory with chat titles
 
 from typing import Dict, List, Tuple, Any, Optional
@@ -267,7 +267,7 @@ class AgricultureOrchestratorAgent:
         self.max_iterations = max_iterations
         self.agent_executor = None
         
-        # Initialize conversation history manager with PostgreSQL
+        # Initialize conversation history manager with Supabase
         self.history_manager = ConversationHistoryManager(session_id=session_id)
         
         # Set chat title if provided
@@ -409,13 +409,48 @@ KEY RULES:
             }
         
         except Exception as e:
-            print(f"\n❌ Agent Error: {str(e)}\n")
+            error_message = str(e)
+            print(f"\n❌ Agent Error: {error_message}\n")
+
+            # Fallback: if tool-calling failed but we already have retrieved context,
+            # synthesize an answer directly to avoid a hard failure.
+            if "Failed to call a function" in error_message and _retrieved_context:
+                fallback_docs = []
+                for domain, docs in _retrieved_context.items():
+                    for doc in docs:
+                        fallback_docs.append({
+                            "domain": domain,
+                            "content": doc.get("content", ""),
+                            "score": doc.get("score", 0),
+                        })
+
+                fallback_answer = synthesize_answer({"documents": fallback_docs}, user_query)
+                duration = time.time() - start_time
+
+                self.history_manager.save_query_response(
+                    query=user_query,
+                    response=fallback_answer,
+                    domains=list(_retrieved_context.keys()),
+                    duration=duration,
+                    status="success"
+                )
+
+                return {
+                    "status": "success",
+                    "answer": fallback_answer,
+                    "reasoning": "Fallback synthesis after tool-call failure",
+                    "metadata": {
+                        "domains_searched": list(_retrieved_context.keys()),
+                        "duration_seconds": round(duration, 2),
+                        "session_id": self.history_manager.session_id,
+                    }
+                }
             
             # Save error to database
             duration = time.time() - start_time
             self.history_manager.save_query_response(
                 query=user_query,
-                response=str(e),
+                response=error_message,
                 domains=[],
                 duration=duration,
                 status="error"
@@ -423,8 +458,8 @@ KEY RULES:
             
             return {
                 "status": "error",
-                "answer": f"Agent encountered an error: {str(e)}",
-                "reasoning": str(e),
+                "answer": f"Agent encountered an error: {error_message}",
+                "reasoning": error_message,
                 "metadata": {"session_id": self.history_manager.session_id}
             }
     
@@ -693,4 +728,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    agent = AgricultureOrchestratorAgent()

@@ -3,9 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import sys
 import os
+from dotenv import load_dotenv
 
 # Add app to path for imports
 sys.path.insert(1, os.path.dirname(__file__))
+
+# Load environment variables from project root
+load_dotenv()
 
 # Import routes
 from routes import api_router

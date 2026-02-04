@@ -199,6 +199,7 @@ def _rule_matches(rule: dict[str, Any], weather: dict[str, float]) -> bool:
     if cond == COND_TEMP_LOW and temp is not None:
         return temp <= rule.get("temp_max", 10)
     if cond == COND_HUMIDITY_HIGH and humidity is not None:
+ 
         return humidity >= rule.get("humidity_min", 80)
     if cond == COND_CHANCE_RAIN_HIGH and chance_rain is not None:
         return chance_rain >= rule.get("chance_min", 50)
@@ -245,3 +246,7 @@ def get_overall_level(triggered: list[dict[str, Any]]) -> str:
     if not triggered:
         return "LOW"
     return max(triggered, key=lambda x: LEVEL_ORDER.get(x["level"], 0))["level"]
+
+
+if __name__ == "__main__":
+    print(evaluate_climate_risk("Wheat", "Vegetative", {"temp_c": 35, "humidity": 90}))

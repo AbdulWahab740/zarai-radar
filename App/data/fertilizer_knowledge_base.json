@@ -1,0 +1,435 @@
+{
+  "fertilizer_recommendations": [
+    {
+      "crop": "wheat",
+      "variety": "general",
+      "region": "Punjab",
+      "base_requirements": {
+        "nitrogen_N_kg_per_acre": 50,
+        "phosphorus_P2O5_kg_per_acre": 25,
+        "potassium_K2O_kg_per_acre": 15,
+        "base_yield_maunds_per_acre": 26,
+        "additional_N_per_10_maunds_increase": 10
+      },
+      "split_application_schedule": [
+        {
+          "stage": "Sowing",
+          "sub_stage": "Germination/Emergence",
+          "days_after_sowing": 0,
+          "days_range": [0, 14],
+          "nitrogen_percent": 30,
+          "phosphorus_percent": 100,
+          "potassium_percent": 100,
+          "instructions": "Apply at time of sowing, mix well with soil before planting",
+          "products": ["DAP for P and base N", "MOP for K"],
+          "urgency_if_missed": "MEDIUM - Can still apply within 10 days as top dressing",
+          "growth_stage_indicators": ["Seed sowing", "Seedling emergence"],
+          "timing_note": "Best applied during land preparation or at sowing"
+        },
+        {
+          "stage": "Vegetative",
+          "sub_stage": "Tillering",
+          "days_after_sowing": 21,
+          "days_range": [15, 35],
+          "nitrogen_percent": 40,
+          "phosphorus_percent": 0,
+          "potassium_percent": 0,
+          "instructions": "Broadcast Urea evenly when soil has moisture, irrigate after 2-3 days",
+          "products": ["Urea"],
+          "urgency_if_missed": "HIGH - Critical for tiller formation and plant density",
+          "growth_stage_indicators": ["3-4 leaves visible", "Side shoots (tillers) emerging", "Plant spreading"],
+          "timing_note": "Apply at Crown Root Initiation (CRI) stage around 21-25 days"
+        },
+        {
+          "stage": "Vegetative",
+          "sub_stage": "Jointing",
+          "days_after_sowing": 50,
+          "days_range": [36, 55],
+          "nitrogen_percent": 30,
+          "phosphorus_percent": 0,
+          "potassium_percent": 0,
+          "instructions": "Apply before booting stage, irrigate immediately to prevent stress",
+          "products": ["Urea"],
+          "urgency_if_missed": "VERY HIGH - Directly affects grain number and size",
+          "growth_stage_indicators": ["Stem elongation visible", "Nodes forming on stem", "Plant height increasing rapidly"],
+          "timing_note": "Apply around 45-55 days, before flag leaf emergence"
+        }
+      ],
+      "soil_type_adjustments": {
+        "Sandy": {
+          "nitrogen_multiplier": 1.2,
+          "phosphorus_multiplier": 1.0,
+          "potassium_multiplier": 1.15,
+          "reason": "Sandy soils drain quickly, nutrients leach easily",
+          "additional_advice": "Apply in smaller, more frequent doses"
+        },
+        "Loamy": {
+          "nitrogen_multiplier": 1.0,
+          "phosphorus_multiplier": 1.0,
+          "potassium_multiplier": 1.0,
+          "reason": "Ideal soil - use standard recommendations",
+          "additional_advice": "Follow normal schedule"
+        },
+        "Clay": {
+          "nitrogen_multiplier": 0.9,
+          "phosphorus_multiplier": 1.1,
+          "potassium_multiplier": 0.95,
+          "reason": "Clay retains nutrients but P availability is lower",
+          "additional_advice": "Ensure good drainage, P may need boost"
+        }
+      },
+      "irrigation_adjustments": {
+        "canal": {"multiplier": 1.0, "advice": "Standard application"},
+        "tubewell": {"multiplier": 1.0, "advice": "Standard application"},
+        "limited_irrigation": {"multiplier": 0.85, "advice": "Reduce N to prevent salt buildup"},
+        "rainfed": {"multiplier": 0.7, "advice": "Apply only if good rainfall expected"}
+      },
+      "weather_based_recommendations": {
+        "heavy_rain_forecast": "Delay application by 3-5 days to prevent leaching",
+        "drought_conditions": "Irrigate before application, reduce dosage by 15%",
+        "normal_conditions": "Follow standard schedule"
+      },
+      "source": "PARC Wheat Production Technology, Punjab Agriculture Department"
+    }
+  ],
+
+  "fertilizer_products": [
+    {
+      "product_name": "Urea",
+      "common_name": "Urea (Khariya)",
+      "composition": {
+        "nitrogen_N_percent": 46,
+        "phosphorus_P2O5_percent": 0,
+        "potassium_K2O_percent": 0
+      },
+      "physical_properties": {
+        "kg_per_bag": 50,
+        "color": "White granules"
+      },
+      "pricing": {
+        "avg_price_pkr_per_bag": 4000,
+        "price_range": [3800, 4200],
+        "last_updated": "2025-01-01"
+      },
+      "usage": {
+        "primary_purpose": "Nitrogen source for plant growth",
+        "best_for_stages": ["Tillering", "Jointing", "Top-dressing"],
+        "application_method": "Broadcast and incorporate or irrigate"
+      },
+      "availability": "Widely available",
+      "manufacturers": ["Fauji Fertilizer", "Engro Fertilizers", "Fatima Fertilizer"]
+    },
+    {
+      "product_name": "DAP",
+      "common_name": "DAP (Di-Ammonium Phosphate)",
+      "composition": {
+        "nitrogen_N_percent": 18,
+        "phosphorus_P2O5_percent": 46,
+        "potassium_K2O_percent": 0
+      },
+      "physical_properties": {
+        "kg_per_bag": 50,
+        "color": "Black/dark gray granules"
+      },
+      "pricing": {
+        "avg_price_pkr_per_bag": 7000,
+        "price_range": [6500, 7500],
+        "last_updated": "2025-01-01"
+      },
+      "usage": {
+        "primary_purpose": "Phosphorus and some Nitrogen at sowing",
+        "best_for_stages": ["Sowing", "Land preparation"],
+        "application_method": "Mix with soil at planting time"
+      },
+      "availability": "Widely available",
+      "manufacturers": ["Fauji Fertilizer", "Engro Fertilizers"]
+    },
+    {
+      "product_name": "MOP",
+      "common_name": "Potash / Shora Potash",
+      "composition": {
+        "nitrogen_N_percent": 0,
+        "phosphorus_P2O5_percent": 0,
+        "potassium_K2O_percent": 60
+      },
+      "physical_properties": {
+        "kg_per_bag": 50,
+        "color": "Pink/red crystals"
+      },
+      "pricing": {
+        "avg_price_pkr_per_bag": 5000,
+        "price_range": [4500, 5500],
+        "last_updated": "2025-01-01"
+      },
+      "usage": {
+        "primary_purpose": "Potassium for root development and disease resistance",
+        "best_for_stages": ["Sowing"],
+        "application_method": "Mix with soil at planting"
+      },
+      "availability": "Available in major markets",
+      "manufacturers": ["Imported - various"]
+    },
+    {
+      "product_name": "SOP",
+      "common_name": "Sulphate of Potash",
+      "composition": {
+        "nitrogen_N_percent": 0,
+        "phosphorus_P2O5_percent": 0,
+        "potassium_K2O_percent": 50,
+        "sulphur_S_percent": 18
+      },
+      "physical_properties": {
+        "kg_per_bag": 50,
+        "color": "White crystals"
+      },
+      "pricing": {
+        "avg_price_pkr_per_bag": 6500,
+        "price_range": [6000, 7000],
+        "last_updated": "2025-01-01"
+      },
+      "usage": {
+        "primary_purpose": "Potassium + Sulphur, better for chloride-sensitive crops",
+        "best_for_stages": ["Sowing"],
+        "application_method": "Mix with soil at planting"
+      },
+      "availability": "Less common than MOP",
+      "manufacturers": ["Imported - various"]
+    },
+    {
+      "product_name": "NPK_15_15_15",
+      "common_name": "NPK Complex Fertilizer",
+      "composition": {
+        "nitrogen_N_percent": 15,
+        "phosphorus_P2O5_percent": 15,
+        "potassium_K2O_percent": 15
+      },
+      "physical_properties": {
+        "kg_per_bag": 50,
+        "color": "Gray granules"
+      },
+      "pricing": {
+        "avg_price_pkr_per_bag": 5500,
+        "price_range": [5000, 6000],
+        "last_updated": "2025-01-01"
+      },
+      "usage": {
+        "primary_purpose": "Balanced nutrition, can replace DAP+Urea+MOP",
+        "best_for_stages": ["Sowing"],
+        "application_method": "Mix with soil at planting"
+      },
+      "availability": "Available",
+      "manufacturers": ["Fauji Fertilizer", "Various importers"]
+    },
+    {
+      "product_name": "CAN",
+      "common_name": "Calcium Ammonium Nitrate",
+      "composition": {
+        "nitrogen_N_percent": 26,
+        "calcium_Ca_percent": 8,
+        "phosphorus_P2O5_percent": 0,
+        "potassium_K2O_percent": 0
+      },
+      "physical_properties": {
+        "kg_per_bag": 50,
+        "color": "White/cream granules"
+      },
+      "pricing": {
+        "avg_price_pkr_per_bag": 4500,
+        "price_range": [4200, 4800],
+        "last_updated": "2025-01-01"
+      },
+      "usage": {
+        "primary_purpose": "Nitrogen + Calcium, less leaching than Urea",
+        "best_for_stages": ["Tillering", "Jointing"],
+        "application_method": "Broadcast, more stable than Urea"
+      },
+      "availability": "Moderate",
+      "manufacturers": ["Imported - various"]
+    }
+  ],
+
+  "deficiency_symptoms": [
+    {
+      "nutrient": "Nitrogen",
+      "crop": "wheat",
+      "symptoms": [
+        "Yellowing of older/lower leaves first",
+        "Stunted plant growth",
+        "Pale green overall color",
+        "Thin weak stems",
+        "Reduced tillering"
+      ],
+      "visual_indicators": "V-shaped yellowing starting from leaf tip",
+      "stages_most_vulnerable": ["Tillering", "Jointing"],
+      "correction": {
+        "product": "Urea",
+        "dosage": "10-15 kg/acre (0.2-0.3 bags)",
+        "application_method": "Broadcast and irrigate immediately",
+        "timing": "Apply as soon as symptoms appear",
+        "expected_recovery": "7-10 days"
+      },
+      "prevention": "Follow recommended split application schedule"
+    },
+    {
+      "nutrient": "Phosphorus",
+      "crop": "wheat",
+      "symptoms": [
+        "Dark green or purple-tinged leaves",
+        "Slow growth and delayed maturity",
+        "Poor root development",
+        "Fewer tillers",
+        "Purple coloration on older leaves in cold weather"
+      ],
+      "visual_indicators": "Darker than normal green, sometimes purple edges",
+      "stages_most_vulnerable": ["Sowing", "Early Vegetative"],
+      "correction": {
+        "product": "DAP",
+        "dosage": "10-15 kg/acre (0.2-0.3 bags)",
+        "application_method": "Side dressing near roots, irrigate",
+        "timing": "Most effective in early stages, less effective after tillering",
+        "expected_recovery": "14-21 days"
+      },
+      "prevention": "Apply full P dose at sowing time"
+    },
+    {
+      "nutrient": "Potassium",
+      "crop": "wheat",
+      "symptoms": [
+        "Yellowing and browning of leaf margins (older leaves first)",
+        "Weak stems prone to lodging",
+        "Increased susceptibility to diseases",
+        "Poor grain filling",
+        "Scorching of leaf tips and margins"
+      ],
+      "visual_indicators": "Yellow/brown scorched margins on older leaves",
+      "stages_most_vulnerable": ["Flowering", "Grain Filling"],
+      "correction": {
+        "product": "MOP or SOP",
+        "dosage": "10 kg/acre (0.2 bags)",
+        "application_method": "Broadcast and irrigate",
+        "timing": "Can apply any stage, most critical during grain filling",
+        "expected_recovery": "14-21 days"
+      },
+      "prevention": "Apply K at sowing, especially in sandy soils"
+    }
+  ],
+
+  "regional_recommendations": {
+    "Punjab": {
+      "districts": {
+        "Faisalabad": {
+          "soil_type_common": "Loamy",
+          "typical_N_rate": 50,
+          "typical_P_rate": 25,
+          "typical_K_rate": 15,
+          "special_notes": "Rice-wheat zone, may need extra K due to rice residue"
+        },
+        "Multan": {
+          "soil_type_common": "Sandy-Loam",
+          "typical_N_rate": 55,
+          "typical_P_rate": 25,
+          "typical_K_rate": 20,
+          "special_notes": "Higher K due to cotton-wheat rotation"
+        },
+        "Gujranwala": {
+          "soil_type_common": "Loamy",
+          "typical_N_rate": 50,
+          "typical_P_rate": 30,
+          "typical_K_rate": 15,
+          "special_notes": "High-yielding area, good irrigation"
+        }
+      }
+    },
+    "Sindh": {
+      "districts": {
+        "Hyderabad": {
+          "soil_type_common": "Clay-Loam",
+          "typical_N_rate": 45,
+          "typical_P_rate": 30,
+          "typical_K_rate": 15,
+          "special_notes": "Clay soils, need more P"
+        }
+      }
+    },
+    "KPK": {
+      "districts": {
+        "Peshawar": {
+          "soil_type_common": "Loamy",
+          "typical_N_rate": 50,
+          "typical_P_rate": 25,
+          "typical_K_rate": 15,
+          "special_notes": "Cool climate, may need less N"
+        }
+      }
+    }
+  },
+
+  "application_tips": [
+    {
+      "tip": "Best time to apply fertilizer",
+      "advice": "Early morning (6-9 AM) or late evening (4-7 PM) to avoid burning in hot sun"
+    },
+    {
+      "tip": "When to irrigate after fertilizer",
+      "advice": "Irrigate 2-3 days after Urea application for best absorption"
+    },
+    {
+      "tip": "Rain forecast",
+      "advice": "Avoid applying 1-2 days before heavy rain to prevent leaching and waste"
+    },
+    {
+      "tip": "Uniform application",
+      "advice": "Divide field into sections, apply calculated amount per section for even distribution"
+    },
+    {
+      "tip": "Storage",
+      "advice": "Store fertilizer bags in dry place, away from moisture. Use within 6 months."
+    },
+    {
+      "tip": "Safety",
+      "advice": "Wear gloves when handling fertilizers. Wash hands after application."
+    }
+  ],
+
+  "common_mistakes": [
+    {
+      "mistake": "Applying all nitrogen at once",
+      "why_bad": "Causes excessive growth, lodging, disease susceptibility, and nutrient leaching",
+      "correct_approach": "Split nitrogen into 3 doses as per schedule"
+    },
+    {
+      "mistake": "Not irrigating after urea application",
+      "why_bad": "Urea volatilizes and nitrogen escapes as ammonia gas - 30-40% loss",
+      "correct_approach": "Irrigate within 2-3 days of urea application"
+    },
+    {
+      "mistake": "Applying fertilizer in dry soil",
+      "why_bad": "Poor nutrient uptake, potential salt damage to roots",
+      "correct_approach": "Irrigate 1 day before or ensure soil has moisture"
+    },
+    {
+      "mistake": "Using last year's fertilizer rate regardless of conditions",
+      "why_bad": "Different varieties, soil conditions, yield targets need different rates",
+      "correct_approach": "Adjust based on current crop, soil, and yield target"
+    },
+    {
+      "mistake": "Skipping phosphorus at sowing",
+      "why_bad": "Cannot be corrected later, leads to poor root development and permanent yield loss",
+      "correct_approach": "Always apply full P dose at sowing time"
+    }
+  ],
+
+  "metadata": {
+    "version": "1.0",
+    "created_date": "2025-02-04",
+    "purpose": "ZaraiRadar MVP Fertilizer Optimization",
+    "coverage": "Wheat crop in Pakistan",
+    "data_sources": [
+      "PARC Wheat Production Technology",
+      "Punjab Agriculture Department Guidelines",
+      "Fauji Fertilizer Company Technical Bulletins",
+      "University of Agriculture Faisalabad Research"
+    ],
+    "disclaimer": "Recommendations are general guidelines. Soil testing and local expert consultation recommended for precise application rates."
+  }
+}

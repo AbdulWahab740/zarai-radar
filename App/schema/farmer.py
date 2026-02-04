@@ -7,4 +7,9 @@ class FarmerInfo(BaseModel):
     crop: str
     phone: str
     stage: str
-    area: str
+    area: int
+    crop_start_date: str
+    soil_type: str
+    irrigation_type: str
+    days_after_sowing: int
+

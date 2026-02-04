@@ -9,3 +9,4 @@ test_orchestrator.py
 /App/__pycache__
 /agri-tech
 /RAG/data
+/App/.env
