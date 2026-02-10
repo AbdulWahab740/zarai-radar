@@ -10,3 +10,6 @@ test_orchestrator.py
 /agri-tech
 /RAG/data
 /App/.env
+
+/App/services/test_images/*
+/App/services/wheat_disease_classifier.keras

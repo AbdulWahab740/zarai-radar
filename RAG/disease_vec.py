@@ -351,7 +351,7 @@ if __name__ == "__main__":
         'province': 'Punjab',
         'district': 'Faisalabad',
         'stage': 'Vegetative',
-        'days_since_sowing': 45,
+        'days_since_sowing': 40,
         'temp': 22,
         'humidity': 85
     }

@@ -158,15 +158,15 @@ def retrieve_multi_domain_documents(domains: str, query: str,
 @tool
 def analyze_retrieved_documents(documents_json: str, query: str) -> str:
     """
-    Analyze retrieved documents to determine if more information is needed.
-    Helps agent reason about whether to retrieve more documents.
+    Evaluate the quality and sufficiency of the retrieved information.
+    Helps determine if more domains should be searched or if search terms should be refined.
     
     Args:
-        documents_json: JSON string of retrieved documents
-        query: Original user query
+        documents_json: The documents retrieved from the previous tool in JSON format.
+        query: The user's original query to check against.
         
     Returns:
-        Analysis with suggestions for additional retrieval if needed
+        JSON string indicating if context is sufficient and giving next-step recommendations.
     """
     try:
         docs = json.loads(documents_json)
@@ -176,7 +176,7 @@ def analyze_retrieved_documents(documents_json: str, query: str) -> str:
             return json.dumps({
                 "sufficient": False,
                 "reason": "No documents retrieved",
-                "recommendation": "Try broader search terms or check all domains"
+                "recommendation": "Try broader search terms or check alternative domains"
             })
         
         avg_score = sum(d.get("score", 0) for d in doc_list) / len(doc_list)
@@ -186,29 +186,29 @@ def analyze_retrieved_documents(documents_json: str, query: str) -> str:
             "doc_count": len(doc_list),
             "avg_relevance": round(avg_score, 4),
             "recommendation": (
-                "Sufficient context" if avg_score > 0.3 and len(doc_list) >= 3
-                else "Retrieve more documents from different domains or refine search"
+                "Sufficient context gathered. Use synthesize_answer now." if avg_score > 0.3 and len(doc_list) >= 3
+                else "Retrieve more documents from different domains or refine keywords."
             )
         }
         return json.dumps(analysis)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return json.dumps({"error": f"Failed to analyze: {str(e)}"})
 
 @tool
-def synthesize_answer(context_json, query: str) -> str:
+def synthesize_answer(context_json: str, query: str) -> str:
     """
-    Synthesize final answer from retrieved context.
-    This is the final step - formats answer based on retrieved docs.
+    Combine all gathered context into a final, comprehensive answer for the user.
+    Grounds the response in the provided agricultural expert knowledge.
     
     Args:
-        context_json: JSON string or dict with all relevant documents
-        query: Original query
+        context_json: A JSON string containing the 'documents' list collected from retrievers.
+        query: The user's original question to be answered.
         
     Returns:
-        Synthesized answer based on context
+        The final formatted answer string based solely on the context.
     """
     try:
-        # Handle both string and dict inputs
+        # Handle both string and dict inputs (though LangChain should pass string)
         if isinstance(context_json, str):
             context = json.loads(context_json)
         else:
@@ -217,28 +217,33 @@ def synthesize_answer(context_json, query: str) -> str:
         docs = context.get("documents", [])
         
         if not docs:
-            return "No relevant information found in knowledge base. Please try a different question."
+            # Check if it's a flatter list
+            if isinstance(context, list):
+                docs = context
+            else:
+                return "No relevant information found in knowledge base. Please try rephrasing your question."
         
-        context_text = "\n".join([
-            f"[{doc.get('domain', 'N/A').upper()}] {doc.get('content', '')}"
+        context_text = "\n\n".join([
+            f"--- SOURCE: {doc.get('domain', 'Knowledge Base').upper()} ---\n{doc.get('content', '')}"
             for doc in docs
         ])
         
-        prompt = f"""Based on ONLY the following context, answer the user's question.
-Do NOT invent information. If answer is not in context, say so.
+        prompt = f"""You are an expert Agricultural Advisor powered by Zarai Radar. 
+Use ONLY the provided context below to answer the farmer's question. 
+If the context doesn't contain the answer, politely state that you can't find specific details for that in the local database but offer general guidance based on common agricultural themes in the context.
 
-CONTEXT:
+AGRI-TECH KNOWLEDGE CONTEXT:
 {context_text}
 
-USER QUESTION: {query}
+FARMER'S QUESTION: {query}
 
-ANSWER:"""
+EXPERT RESPONSE (Be helpful, professional, and practical):"""
         
         message = HumanMessage(content=prompt)
         response = llm.invoke([message])
         return response.content
     except Exception as e:
-        return f"Error synthesizing answer: {str(e)}"
+        return f"I found the information but couldn't format the answer: {str(e)}. Please try asking again."
 
 
 # ============================================================================
@@ -286,22 +291,21 @@ class AgricultureOrchestratorAgent:
             synthesize_answer,
         ]
         
-        # System prompt with context awareness
-        system_prompt = """You are an agricultural knowledge agent. Answer questions efficiently using available tools.
+        # System prompt with context-aware instructions for ReAct flow
+        system_prompt = """You are Zarai Radar's Agricultural Knowledge Agent. Your goal is to provide accurate, context-grounded advice to farmers.
 
-TASK WORKFLOW:
-1. Call analyze_query_intent to determine relevant domains
-2. Call retrieve_documents_from_domain or retrieve_multi_domain_documents based on intent
-3. If documents look sufficient (avg score > 0.3 and count >= 3), call synthesize_answer
-4. If documents are insufficient, try alternative domain searches or refine keywords, then synthesize
+WORKFLOW PROTOCOL:
+1. START by calling `analyze_query_intent` to identify the relevant agricultural domains (disease, climate, soil, or policy).
+2. SEARCH for information using `retrieve_documents_from_domain` or `retrieve_multi_domain_documents` based on the detected intent.
+3. EVALUATE the results. If you have at least 3 relevant source documents with good scores, proceed to step 4. Otherwise, try searching another relevant domain or using different keywords.
+4. FINISH by calling `synthesize_answer` once you have gathered sufficient context to answer the user's question completely.
 
-KEY RULES:
-- Be concise and direct in your reasoning
-- Make maximum 2-3 tool calls before synthesizing the answer
-- Ground all answers in retrieved documents - do not invent facts
-- Use conversation history to avoid repetition
-- When done gathering information, immediately call synthesize_answer
-- Do not over-iterate or make redundant tool calls"""
+OPERATIONAL RULES:
+- Use at most 3-4 tool calls total.
+- NEVER invent information; if it's not in the retrieved documents, say you don't have that specific data.
+- Always use the conversation history to provide contextualized responses.
+- Your final output for every user query MUST be generated through the `synthesize_answer` tool.
+"""
         
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
@@ -310,16 +314,17 @@ KEY RULES:
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ])
         
-        # Create the agent
+        # Create the agent with resilient configuration
         agent = create_tool_calling_agent(self.llm_with_tools, tools, prompt)
         
-        # Create executor with max iterations
+        # Create executor with appropriate limits
         self.agent_executor = AgentExecutor(
             agent=agent,
             tools=tools,
             verbose=True,
             max_iterations=self.max_iterations,
-            early_stopping_method="force"  # Force stop after max iterations
+            handle_parsing_errors=True,  # Crucial for preventing hard failures on malformed LLM responses
+            early_stopping_method="force"
         )
     
     def process_query(self, user_query: str) -> Dict[str, Any]:
@@ -358,6 +363,9 @@ KEY RULES:
         print(f"{'='*70}\n")
         
         try:
+            # Clear global context before each query to prevent bleed-through
+            _retrieved_context.clear()
+            
             # Add user message to history
             self.history_manager.add_user_message(user_query)
             
@@ -372,12 +380,22 @@ KEY RULES:
             
             final_output = result.get("output", "")
             
+            # If the agent output is "Agent stopped due to max iterations" or similar, 
+            # and we have context, try to synthesize
+            if (not final_output or "max_iterations" in final_output.lower()) and _retrieved_context:
+                print("⚠️ Agent reached limit or iteration cap. Using fallback synthesis.")
+                fallback_docs = []
+                for domain, docs in _retrieved_context.items():
+                    fallback_docs.extend(docs)
+                final_output = synthesize_answer.invoke({"context_json": json.dumps({"documents": fallback_docs}), "query": user_query})
+            
             # Add agent response to history
             self.history_manager.add_agent_response(final_output, {
                 "type": "response",
                 "iteration_count": len(result.get("intermediate_steps", []))
             })
             
+            # ... (rest of the processing)
             print(f"\n{'='*70}")
             print(f"📋 FINAL ANSWER")
             print(f"{'='*70}\n")
@@ -392,7 +410,7 @@ KEY RULES:
             self.history_manager.save_query_response(
                 query=user_query,
                 response=final_output,
-                domains=domains_searched if domains_searched else ["multiple"],
+                domains=domains_searched if domains_searched else ["retrieval_failed"],
                 duration=duration,
                 status="success"
             )
@@ -400,7 +418,7 @@ KEY RULES:
             return {
                 "status": "success",
                 "answer": final_output,
-                "reasoning": "Agent used multi-step reasoning with tool calls to gather and synthesize information",
+                "reasoning": "Agent processed your query using gathered agricultural knowledge",
                 "metadata": {
                     "domains_searched": domains_searched if domains_searched else ["multiple"],
                     "duration_seconds": round(duration, 2),
@@ -412,39 +430,40 @@ KEY RULES:
             error_message = str(e)
             print(f"\n❌ Agent Error: {error_message}\n")
 
-            # Fallback: if tool-calling failed but we already have retrieved context,
-            # synthesize an answer directly to avoid a hard failure.
-            if "Failed to call a function" in error_message and _retrieved_context:
-                fallback_docs = []
-                for domain, docs in _retrieved_context.items():
-                    for doc in docs:
-                        fallback_docs.append({
-                            "domain": domain,
-                            "content": doc.get("content", ""),
-                            "score": doc.get("score", 0),
-                        })
+            # BROAD FALLBACK: If we have ANY retrieved context, synthesize an answer!
+            if _retrieved_context:
+                print("♻️ Attempting emergency fallback synthesis...")
+                all_docs = []
+                for dom, docs in _retrieved_context.items():
+                    all_docs.extend(docs)
+                
+                try:
+                    fallback_answer = synthesize_answer.invoke({
+                        "context_json": json.dumps({"documents": all_docs}), 
+                        "query": user_query
+                    })
+                    
+                    duration = time.time() - start_time
+                    self.history_manager.save_query_response(
+                        query=user_query,
+                        response=fallback_answer,
+                        domains=list(_retrieved_context.keys()),
+                        duration=duration,
+                        status="success"
+                    )
 
-                fallback_answer = synthesize_answer({"documents": fallback_docs}, user_query)
-                duration = time.time() - start_time
-
-                self.history_manager.save_query_response(
-                    query=user_query,
-                    response=fallback_answer,
-                    domains=list(_retrieved_context.keys()),
-                    duration=duration,
-                    status="success"
-                )
-
-                return {
-                    "status": "success",
-                    "answer": fallback_answer,
-                    "reasoning": "Fallback synthesis after tool-call failure",
-                    "metadata": {
-                        "domains_searched": list(_retrieved_context.keys()),
-                        "duration_seconds": round(duration, 2),
-                        "session_id": self.history_manager.session_id,
+                    return {
+                        "status": "success",
+                        "answer": fallback_answer,
+                        "reasoning": f"Emergency synthesis used (Agent encountered error: {error_message[:50]}...)",
+                        "metadata": {
+                            "domains_searched": list(_retrieved_context.keys()),
+                            "duration_seconds": round(duration, 2),
+                            "session_id": self.history_manager.session_id,
+                        }
                     }
-                }
+                except Exception as fallback_err:
+                    print(f"❌ Fallback failed: {str(fallback_err)}")
             
             # Save error to database
             duration = time.time() - start_time

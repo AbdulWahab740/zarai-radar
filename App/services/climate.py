@@ -1,39 +1,38 @@
-import requests
+import httpx
 import datetime
+import asyncio
 from dotenv import load_dotenv
 import os
 from schema.climate import ClimateData
-import requests
-import datetime
 from fastapi import HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Optional
 from pathlib import Path
+import time
 
-env_path = Path(__file__).resolve().parent / "services" / ".env"  # adjust if needed
-
+env_path = Path(__file__).resolve().parent / "services" / ".env"
 load_dotenv(dotenv_path=env_path)
 
+# Simple TTL Cache for weather data
+# Keys: "lat_lon_type", Values: {"data": ..., "expires": timestamp}
+WEATHER_CACHE: Dict[str, Dict] = {}
+CACHE_TTL_SECONDS = 900  # 15 minutes
 
-# Coordinates (lat, lon) for farmer districts – same cities as in setup
+# Coordinates (lat, lon) for farmer districts
 DISTRICT_COORDINATES = {
-    # Punjab
     "Lahore": (31.5204, 74.3587),
     "Multan": (30.1978, 71.4711),
     "Faisalabad": (31.4181, 73.0789),
     "Gujranwala": (32.1877, 74.1945),
     "Rawalpindi": (33.6007, 73.0679),
-    # Sindh
     "Karachi": (24.8607, 67.0011),
     "Hyderabad": (25.3969, 68.3578),
     "Sukkur": (27.7052, 68.8574),
     "Larkana": (27.5604, 68.2267),
-    # KPK
     "Peshawar": (33.9920, 71.4800),
     "Mardan": (34.1983, 72.0450),
     "Abbottabad": (34.1688, 73.2215),
     "Swat": (34.7795, 72.3624),
-    # Balochistan
     "Quetta": (30.1798, 66.9750),
     "Gwadar": (25.1214, 62.3254),
     "Turbat": (26.0026, 63.0500),
@@ -51,47 +50,62 @@ def get_lat_lon_for_district(district: str) -> tuple[float, float]:
             return coords
     raise HTTPException(
         status_code=404,
-        detail=f"Coordinates not defined for district: {district}. Supported: {list(DISTRICT_COORDINATES.keys())}",
+        detail=f"Coordinates not defined for district: {district}.",
     )
 
 
-def get_climate_data(lat: float, lon: float) -> List[ClimateData]:
+async def get_climate_data(lat: float, lon: float) -> List[ClimateData]:
     """
-    Fetch current-hour climate data using Open-Meteo (free, no API key)
+    Fetch current-hour climate data asynchronously with caching.
     """
+    cache_key = f"{lat}_{lon}_current"
+    now_ts = time.time()
     
+    if cache_key in WEATHER_CACHE:
+        if now_ts < WEATHER_CACHE[cache_key]["expires"]:
+            return WEATHER_CACHE[cache_key]["data"]
+
     OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
     if not OPENWEATHER_API_KEY:
         raise HTTPException(status_code=500, detail="OpenWeather API key not configured")
 
-    current_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric"
-    current_data = requests.get(current_url).json()
-
-    humidity_now = current_data["main"]["humidity"] 
-
-    url = (
-        "https://api.open-meteo.com/v1/forecast"
-        f"?latitude={lat}&longitude={lon}"
-        "&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation_probability"
-        "&current_weather=true"
-        "&timezone=auto"
-    )
-
-    response = requests.get(url)
-    data = response.json()
-
-    if "hourly" not in data:
-        raise HTTPException(
-            status_code=502,
-            detail="Invalid response from Open-Meteo"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        # Current Weather (OpenWeather)
+        current_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric"
+        
+        # Forecast (Open-Meteo)
+        forecast_url = (
+            "https://api.open-meteo.com/v1/forecast"
+            f"?latitude={lat}&longitude={lon}"
+            "&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation_probability"
+            "&current_weather=true"
+            "&timezone=auto"
         )
 
-    hourly = data["hourly"]
-    times = hourly["time"]
+        try:
+            responses = await asyncio.gather(
+                client.get(current_url),
+                client.get(forecast_url)
+            )
+            
+            curr_res, fore_res = responses
+            curr_res.raise_for_status()
+            fore_res.raise_for_status()
+            
+            current_data = curr_res.json()
+            data = fore_res.json()
+            
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"Weather service error: {str(e)}")
+
+    humidity_now = current_data["main"]["humidity"]
+    hourly = data.get("hourly", {})
+    times = hourly.get("time", [])
 
     now = datetime.datetime.now()
     current_hour_str = now.strftime("%Y-%m-%dT%H:00")
     records = []
+    
     for i, time_str in enumerate(times):
         if time_str == current_hour_str:
             records.append(
@@ -101,26 +115,35 @@ def get_climate_data(lat: float, lon: float) -> List[ClimateData]:
                     humidity=humidity_now,
                     wind_kph=hourly["wind_speed_10m"][i],
                     chance_of_rain=hourly["precipitation_probability"][i],
-                    condition="Derived from precipitation probability"
+                    condition="Clear" if hourly["precipitation_probability"][i] < 20 else "Cloudy"
                 )
             )
             break
 
     if not records:
-        raise HTTPException(
-            status_code=404,
-            detail="No climate data available for current hour"
-        )
+        raise HTTPException(status_code=404, detail="No climate data available for current hour")
+
+    # Update Cache
+    WEATHER_CACHE[cache_key] = {
+        "data": records,
+        "expires": now_ts + CACHE_TTL_SECONDS
+    }
 
     return records
 
-def get_weekly_weather(lat, lon):
+
+async def get_weekly_weather(lat: float, lon: float) -> List[Dict]:
     """
-    Fetch 7-day weather forecast using Open-Meteo
+    Fetch 7-day weather forecast asynchronously with caching.
     """
+    cache_key = f"{lat}_{lon}_weekly"
+    now_ts = time.time()
+    
+    if cache_key in WEATHER_CACHE:
+        if now_ts < WEATHER_CACHE[cache_key]["expires"]:
+            return WEATHER_CACHE[cache_key]["data"]
 
     url = "https://api.open-meteo.com/v1/forecast"
-
     params = {
         "latitude": lat,
         "longitude": lon,
@@ -133,16 +156,18 @@ def get_weekly_weather(lat, lon):
         "timezone": "auto"
     }
 
-    response = requests.get(url, params=params)
-    response.raise_for_status()
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"Weekly weather service error: {str(e)}")
 
-    data = response.json()
-    daily = data["daily"]
-
+    daily = data.get("daily", {})
     weekly_weather = []
 
-    for i in range(len(daily["time"])):
-
+    for i in range(len(daily.get("time", []))):
         weekly_weather.append({
             "date": daily["time"][i],
             "temp_max": daily["temperature_2m_max"][i],
@@ -151,6 +176,16 @@ def get_weekly_weather(lat, lon):
             "humidity": daily["relative_humidity_2m_mean"][i]
         })
 
+    # Update Cache
+    WEATHER_CACHE[cache_key] = {
+        "data": weekly_weather,
+        "expires": now_ts + CACHE_TTL_SECONDS
+    }
+
     return weekly_weather
+
+
 if __name__ == "__main__":
-    print(get_climate_data(30.1978, 71.4711))
+    # Test
+    # asyncio.run(get_climate_data(30.1978, 71.4711))
+    pass

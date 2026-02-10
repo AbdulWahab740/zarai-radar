@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from App.schema.farmer import FarmerInfo
 from App.db import supabase
 from App.routes.auth import get_current_user
-
+from App.data.irrigation import get_wheat_stage
 router = APIRouter()
 
 @router.get("/farmer-info")
@@ -37,12 +37,17 @@ async def create_farmer_info(
 ):
     """Create farmer info for the authenticated user. user_id and username are set from signup."""
     try:
+
         data = info.dict()
         # Set user_id and username from the signed-in user (signup table)
         data["user_id"] = current_user["id"]
         data["username"] = current_user["username"]
+        _, sub_stage = get_wheat_stage(data["date_after_sowing"])
+        data["sub_stage"] = sub_stage
         response = supabase.table("farmer_info").insert(data).execute()
-
+        supabase.table("farmer_info").update({
+        "status": "active"
+    }).eq("user_id", current_user["id"]).execute()
         if not response.data:
             raise HTTPException(status_code=500, detail="Failed to save farmer info")
 

@@ -443,15 +443,15 @@ def get_application_tips(farmer_data: Dict, schedule: List[Dict]) -> List[Dict]:
     
     tips = []
     
-    # Add general tips
-    for tip in FERTILIZER_KB['application_tips'][:3]:
+    # 1. Add general tips from Knowledge Base
+    for tip in FERTILIZER_KB['application_tips'][:2]:
         tips.append({
             "type": "general",
             "title": tip['tip'],
             "advice": tip['advice']
         })
     
-    # Add weather-based tips
+    # 2. Add weather-based tips
     weather = farmer_data.get('weather', {})
     if weather.get('rainfall_forecast_7d', 0) > 30:
         tips.append({
@@ -460,7 +460,7 @@ def get_application_tips(farmer_data: Dict, schedule: List[Dict]) -> List[Dict]:
             "advice": "Delay fertilizer application until after rain to prevent nutrient leaching and waste"
         })
     
-    # Add soil-specific tips
+    # 3. Add soil-specific tips
     soil_type = farmer_data.get('soil_type')
     if soil_type == 'Sandy':
         tips.append({
@@ -469,7 +469,7 @@ def get_application_tips(farmer_data: Dict, schedule: List[Dict]) -> List[Dict]:
             "advice": "Apply fertilizer in smaller doses more frequently to prevent leaching"
         })
     
-    # Add urgency warnings
+    # 4. Add urgency warnings (DUE_NOW and MISSED)
     for application in schedule:
         if application['status'] == 'DUE_NOW':
             tips.insert(0, {  # Add at top
@@ -477,7 +477,24 @@ def get_application_tips(farmer_data: Dict, schedule: List[Dict]) -> List[Dict]:
                 "title": f"⚠️ {application['stage']} stage fertilizer DUE NOW",
                 "advice": f"Apply within next 2-3 days for best results. {application['importance']}"
             })
+        elif application['status'] == 'MISSED' and 'HIGH' in application['importance'].upper():
+            tips.insert(0, {
+                "type": "warning",
+                "title": f"❗ MISSED {application['stage']} Application",
+                "advice": f"You missed the critical {application['sub_stage']} application. Consult an expert immediately as this affects yield."
+            })
     
+    # 5. Flowering stage specific tip if no other urgent tips
+    if not any(t['type'] in ['urgent', 'warning'] for t in tips):
+        das = farmer_data.get('days_after_sowing', 0)
+        main_stage, _ = get_wheat_stage(das)
+        if main_stage == "Flowering":
+            tips.append({
+                "type": "general",
+                "title": "Flowering Stage Monitoring",
+                "advice": "Inspect for uniform heading. Avoid heavy irrigation during peak flowering to prevent lodging."
+            })
+            
     return tips
 
 

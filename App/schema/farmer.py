@@ -12,4 +12,6 @@ class FarmerInfo(BaseModel):
     soil_type: str
     irrigation_type: str
     days_after_sowing: int
+    latitude: float | None = None
+    longitude: float | None = None
 

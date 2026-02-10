@@ -10,7 +10,6 @@ from datetime import datetime
 
 Base = declarative_base()
 
-
 class Conversation(Base):
     """
     Represents a chat conversation session with metadata.

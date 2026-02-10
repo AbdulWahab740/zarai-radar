@@ -16,43 +16,91 @@
           "stage": "Sowing",
           "sub_stage": "Germination/Emergence",
           "days_after_sowing": 0,
-          "days_range": [0, 14],
+          "days_range": [
+            0,
+            14
+          ],
           "nitrogen_percent": 30,
           "phosphorus_percent": 100,
           "potassium_percent": 100,
           "instructions": "Apply at time of sowing, mix well with soil before planting",
-          "products": ["DAP for P and base N", "MOP for K"],
+          "products": [
+            "DAP for P and base N",
+            "MOP for K"
+          ],
           "urgency_if_missed": "MEDIUM - Can still apply within 10 days as top dressing",
-          "growth_stage_indicators": ["Seed sowing", "Seedling emergence"],
+          "growth_stage_indicators": [
+            "Seed sowing",
+            "Seedling emergence"
+          ],
           "timing_note": "Best applied during land preparation or at sowing"
         },
         {
           "stage": "Vegetative",
           "sub_stage": "Tillering",
           "days_after_sowing": 21,
-          "days_range": [15, 35],
+          "days_range": [
+            15,
+            35
+          ],
           "nitrogen_percent": 40,
           "phosphorus_percent": 0,
           "potassium_percent": 0,
           "instructions": "Broadcast Urea evenly when soil has moisture, irrigate after 2-3 days",
-          "products": ["Urea"],
+          "products": [
+            "Urea"
+          ],
           "urgency_if_missed": "HIGH - Critical for tiller formation and plant density",
-          "growth_stage_indicators": ["3-4 leaves visible", "Side shoots (tillers) emerging", "Plant spreading"],
+          "growth_stage_indicators": [
+            "3-4 leaves visible",
+            "Side shoots (tillers) emerging",
+            "Plant spreading"
+          ],
           "timing_note": "Apply at Crown Root Initiation (CRI) stage around 21-25 days"
         },
         {
           "stage": "Vegetative",
           "sub_stage": "Jointing",
           "days_after_sowing": 50,
-          "days_range": [36, 55],
+          "days_range": [
+            36,
+            55
+          ],
           "nitrogen_percent": 30,
           "phosphorus_percent": 0,
           "potassium_percent": 0,
           "instructions": "Apply before booting stage, irrigate immediately to prevent stress",
-          "products": ["Urea"],
+          "products": [
+            "Urea"
+          ],
           "urgency_if_missed": "VERY HIGH - Directly affects grain number and size",
-          "growth_stage_indicators": ["Stem elongation visible", "Nodes forming on stem", "Plant height increasing rapidly"],
+          "growth_stage_indicators": [
+            "Stem elongation visible",
+            "Nodes forming on stem",
+            "Plant height increasing rapidly"
+          ],
           "timing_note": "Apply around 45-55 days, before flag leaf emergence"
+        },
+        {
+          "stage": "Flowering",
+          "sub_stage": "Anthesis",
+          "days_after_sowing": 95,
+          "days_range": [
+            76,
+            110
+          ],
+          "nitrogen_percent": 0,
+          "phosphorus_percent": 0,
+          "potassium_percent": 0,
+          "instructions": "Monitor for yellowing. If crop looks weak, a light foliar spray of Potassium can help grain weight.",
+          "products": [],
+          "urgency_if_missed": "LOW - Focus is now on moisture management and pest scouting",
+          "growth_stage_indicators": [
+            "Pollen sacs visible",
+            "Heading complete",
+            "Early grain formation"
+          ],
+          "timing_note": "No baseline fertilizer required if previous doses were completed."
         }
       ],
       "soil_type_adjustments": {
@@ -79,10 +127,22 @@
         }
       },
       "irrigation_adjustments": {
-        "canal": {"multiplier": 1.0, "advice": "Standard application"},
-        "tubewell": {"multiplier": 1.0, "advice": "Standard application"},
-        "limited_irrigation": {"multiplier": 0.85, "advice": "Reduce N to prevent salt buildup"},
-        "rainfed": {"multiplier": 0.7, "advice": "Apply only if good rainfall expected"}
+        "canal": {
+          "multiplier": 1.0,
+          "advice": "Standard application"
+        },
+        "tubewell": {
+          "multiplier": 1.0,
+          "advice": "Standard application"
+        },
+        "limited_irrigation": {
+          "multiplier": 0.85,
+          "advice": "Reduce N to prevent salt buildup"
+        },
+        "rainfed": {
+          "multiplier": 0.7,
+          "advice": "Apply only if good rainfall expected"
+        }
       },
       "weather_based_recommendations": {
         "heavy_rain_forecast": "Delay application by 3-5 days to prevent leaching",
@@ -92,7 +152,6 @@
       "source": "PARC Wheat Production Technology, Punjab Agriculture Department"
     }
   ],
-
   "fertilizer_products": [
     {
       "product_name": "Urea",
@@ -108,16 +167,27 @@
       },
       "pricing": {
         "avg_price_pkr_per_bag": 4000,
-        "price_range": [3800, 4200],
+        "price_range": [
+          3800,
+          4200
+        ],
         "last_updated": "2025-01-01"
       },
       "usage": {
         "primary_purpose": "Nitrogen source for plant growth",
-        "best_for_stages": ["Tillering", "Jointing", "Top-dressing"],
+        "best_for_stages": [
+          "Tillering",
+          "Jointing",
+          "Top-dressing"
+        ],
         "application_method": "Broadcast and incorporate or irrigate"
       },
       "availability": "Widely available",
-      "manufacturers": ["Fauji Fertilizer", "Engro Fertilizers", "Fatima Fertilizer"]
+      "manufacturers": [
+        "Fauji Fertilizer",
+        "Engro Fertilizers",
+        "Fatima Fertilizer"
+      ]
     },
     {
       "product_name": "DAP",
@@ -133,16 +203,25 @@
       },
       "pricing": {
         "avg_price_pkr_per_bag": 7000,
-        "price_range": [6500, 7500],
+        "price_range": [
+          6500,
+          7500
+        ],
         "last_updated": "2025-01-01"
       },
       "usage": {
         "primary_purpose": "Phosphorus and some Nitrogen at sowing",
-        "best_for_stages": ["Sowing", "Land preparation"],
+        "best_for_stages": [
+          "Sowing",
+          "Land preparation"
+        ],
         "application_method": "Mix with soil at planting time"
       },
       "availability": "Widely available",
-      "manufacturers": ["Fauji Fertilizer", "Engro Fertilizers"]
+      "manufacturers": [
+        "Fauji Fertilizer",
+        "Engro Fertilizers"
+      ]
     },
     {
       "product_name": "MOP",
@@ -158,16 +237,23 @@
       },
       "pricing": {
         "avg_price_pkr_per_bag": 5000,
-        "price_range": [4500, 5500],
+        "price_range": [
+          4500,
+          5500
+        ],
         "last_updated": "2025-01-01"
       },
       "usage": {
         "primary_purpose": "Potassium for root development and disease resistance",
-        "best_for_stages": ["Sowing"],
+        "best_for_stages": [
+          "Sowing"
+        ],
         "application_method": "Mix with soil at planting"
       },
       "availability": "Available in major markets",
-      "manufacturers": ["Imported - various"]
+      "manufacturers": [
+        "Imported - various"
+      ]
     },
     {
       "product_name": "SOP",
@@ -184,16 +270,23 @@
       },
       "pricing": {
         "avg_price_pkr_per_bag": 6500,
-        "price_range": [6000, 7000],
+        "price_range": [
+          6000,
+          7000
+        ],
         "last_updated": "2025-01-01"
       },
       "usage": {
         "primary_purpose": "Potassium + Sulphur, better for chloride-sensitive crops",
-        "best_for_stages": ["Sowing"],
+        "best_for_stages": [
+          "Sowing"
+        ],
         "application_method": "Mix with soil at planting"
       },
       "availability": "Less common than MOP",
-      "manufacturers": ["Imported - various"]
+      "manufacturers": [
+        "Imported - various"
+      ]
     },
     {
       "product_name": "NPK_15_15_15",
@@ -209,16 +302,24 @@
       },
       "pricing": {
         "avg_price_pkr_per_bag": 5500,
-        "price_range": [5000, 6000],
+        "price_range": [
+          5000,
+          6000
+        ],
         "last_updated": "2025-01-01"
       },
       "usage": {
         "primary_purpose": "Balanced nutrition, can replace DAP+Urea+MOP",
-        "best_for_stages": ["Sowing"],
+        "best_for_stages": [
+          "Sowing"
+        ],
         "application_method": "Mix with soil at planting"
       },
       "availability": "Available",
-      "manufacturers": ["Fauji Fertilizer", "Various importers"]
+      "manufacturers": [
+        "Fauji Fertilizer",
+        "Various importers"
+      ]
     },
     {
       "product_name": "CAN",
@@ -235,19 +336,26 @@
       },
       "pricing": {
         "avg_price_pkr_per_bag": 4500,
-        "price_range": [4200, 4800],
+        "price_range": [
+          4200,
+          4800
+        ],
         "last_updated": "2025-01-01"
       },
       "usage": {
         "primary_purpose": "Nitrogen + Calcium, less leaching than Urea",
-        "best_for_stages": ["Tillering", "Jointing"],
+        "best_for_stages": [
+          "Tillering",
+          "Jointing"
+        ],
         "application_method": "Broadcast, more stable than Urea"
       },
       "availability": "Moderate",
-      "manufacturers": ["Imported - various"]
+      "manufacturers": [
+        "Imported - various"
+      ]
     }
   ],
-
   "deficiency_symptoms": [
     {
       "nutrient": "Nitrogen",
@@ -260,7 +368,10 @@
         "Reduced tillering"
       ],
       "visual_indicators": "V-shaped yellowing starting from leaf tip",
-      "stages_most_vulnerable": ["Tillering", "Jointing"],
+      "stages_most_vulnerable": [
+        "Tillering",
+        "Jointing"
+      ],
       "correction": {
         "product": "Urea",
         "dosage": "10-15 kg/acre (0.2-0.3 bags)",
@@ -281,7 +392,10 @@
         "Purple coloration on older leaves in cold weather"
       ],
       "visual_indicators": "Darker than normal green, sometimes purple edges",
-      "stages_most_vulnerable": ["Sowing", "Early Vegetative"],
+      "stages_most_vulnerable": [
+        "Sowing",
+        "Early Vegetative"
+      ],
       "correction": {
         "product": "DAP",
         "dosage": "10-15 kg/acre (0.2-0.3 bags)",
@@ -302,7 +416,10 @@
         "Scorching of leaf tips and margins"
       ],
       "visual_indicators": "Yellow/brown scorched margins on older leaves",
-      "stages_most_vulnerable": ["Flowering", "Grain Filling"],
+      "stages_most_vulnerable": [
+        "Flowering",
+        "Grain Filling"
+      ],
       "correction": {
         "product": "MOP or SOP",
         "dosage": "10 kg/acre (0.2 bags)",
@@ -313,7 +430,6 @@
       "prevention": "Apply K at sowing, especially in sandy soils"
     }
   ],
-
   "regional_recommendations": {
     "Punjab": {
       "districts": {
@@ -363,7 +479,6 @@
       }
     }
   },
-
   "application_tips": [
     {
       "tip": "Best time to apply fertilizer",
@@ -390,7 +505,6 @@
       "advice": "Wear gloves when handling fertilizers. Wash hands after application."
     }
   ],
-
   "common_mistakes": [
     {
       "mistake": "Applying all nitrogen at once",
@@ -418,7 +532,6 @@
       "correct_approach": "Always apply full P dose at sowing time"
     }
   ],
-
   "metadata": {
     "version": "1.0",
     "created_date": "2025-02-04",
