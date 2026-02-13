@@ -1,6 +1,6 @@
-# 🌾 Zarai Radar - AI-Powered Agricultural Intelligence Platform
+# 🌾 Zarai Radar - Agricultural Advisory Platform
 
-**Zarai Radar** is a comprehensive, AI-driven agricultural decision support system designed specifically for farmers in Pakistan. It combines real-time weather data, satellite imagery analysis, machine learning-based disease detection, and expert agricultural knowledge to provide personalized, actionable insights that help farmers maximize yield while minimizing resource waste.
+**Zarai Radar** is a comprehensive, AI-driven agricultural decision support system designed specifically for farmers in Pakistan. It combines real-time weather data, machine learning-based disease detection, and expert agricultural knowledge to provide personalized, actionable insights that help farmers maximize yield while minimizing resource waste.
 
 ---
 
@@ -12,7 +12,7 @@ Zarai Radar transforms complex agricultural data into simple, farmer-friendly re
 - **Precision fertilizer recommendations** based on crop stage, soil type, and yield targets
 - **Smart irrigation scheduling** that adapts to weather patterns and crop water needs
 - **AI-powered disease detection** using computer vision (TensorFlow/Keras)
-- **Hybrid risk assessment** combining rule-based logic with RAG (Retrieval-Augmented Generation)
+- **Early risk assessment** combining rule-based logic with RAG (Retrieval-Augmented Generation)
 - **Bilingual support** (English and Urdu) for accessibility
 
 ---
@@ -20,6 +20,7 @@ Zarai Radar transforms complex agricultural data into simple, farmer-friendly re
 ## 🏗️ System Architecture
 
 ### **Frontend** (Next.js 15 + React)
+- **Github**: [Frontend](https://github.com/Furqan7313/agri-tech)
 - **Location**: `agri-tech/`
 - **Framework**: Next.js with TypeScript
 - **Styling**: Tailwind CSS with custom design system
@@ -65,18 +66,11 @@ Zarai Radar transforms complex agricultural data into simple, farmer-friendly re
 ### 1. **Hyper-Local Weather Intelligence**
 
 **How it works:**
-- Farmers can provide their exact GPS coordinates during setup (using browser Geolocation API)
-- If coordinates are available, weather data is fetched for that specific location
-- Otherwise, falls back to district-level coordinates
+- Farmers provide thier specific district information to get the updated weather data
 - Data sources:
   - **OpenWeather API**: Current conditions (temperature, humidity, wind)
   - **Open-Meteo API**: 7-day forecast with hourly granularity
 - **Caching**: 15-minute TTL to reduce API calls and improve response time
-
-**Files:**
-- `App/services/climate.py` - Weather data fetching and caching
-- `App/routes/dashboard.py` - Coordinate resolution logic
-- `agri-tech/src/components/dashboard/LiveClimatePanel.tsx` - UI display
 
 ---
 
@@ -85,7 +79,6 @@ Zarai Radar transforms complex agricultural data into simple, farmer-friendly re
 **How it works:**
 
 #### **Step 1: Base Calculation**
-- Retrieves crop-specific nutrient requirements from `fertilizer_knowledge_base.json`
 - Adjusts Nitrogen based on target yield (e.g., +10kg N per 10 maunds increase)
 
 #### **Step 2: Environmental Adjustments**
@@ -114,11 +107,6 @@ Zarai Radar transforms complex agricultural data into simple, farmer-friendly re
 - If heavy rain (>30mm) is forecasted: "⚠️ Delay application by 2-3 days"
 - If critical stage missed: "❗ MISSED Tillering Application - Consult expert"
 
-**Files:**
-- `App/data/fertilizer_recommendation.py` - Core calculation engine
-- `App/data/fertilizer_knowledge_base.json` - PARC-based nutrient data
-- `agri-tech/src/components/dashboard/FertilizerCard.tsx` - UI display
-
 ---
 
 ### 3. **Smart Irrigation Advisory**
@@ -146,10 +134,6 @@ Zarai Radar transforms complex agricultural data into simple, farmer-friendly re
 - Provides next irrigation date based on depletion rate
 - Warns if soil moisture is critically low
 
-**Files:**
-- `App/data/irrigation.py` - Calculation logic
-- `agri-tech/src/components/dashboard/IrrigationTimeline.tsx` - UI display
-
 ---
 
 ### 4. **AI Disease Detection**
@@ -176,14 +160,9 @@ Zarai Radar transforms complex agricultural data into simple, farmer-friendly re
 - First prediction request triggers model load (~5-10 seconds)
 - Subsequent predictions are instant (model stays in memory)
 
-**Files:**
-- `App/services/prediction.py` - Preprocessing and inference
-- `App/routes/prediction.py` - API endpoint
-- `agri-tech/src/components/dashboard/DiseasePredictionCard.tsx` - Upload UI
-
 ---
 
-### 5. **Hybrid Risk Assessment (Rules + RAG)**
+### 5. **Early Risk Assessment**
 
 **How it works:**
 
@@ -195,39 +174,12 @@ Zarai Radar transforms complex agricultural data into simple, farmer-friendly re
   - Humidity conditions
 - Calculates risk score (0-100) based on condition match quality
 
-#### **Phase 2: Semantic Enhancement (RAG)**
-- Generates embedding of farmer context using Sentence Transformers
-- Performs vector similarity search in Supabase pgvector
-- Retrieves top-k relevant agricultural documents
-- Uses Google Gemini to synthesize natural language advice
-
 #### **Output**
 - **Disease Risk**: List of likely diseases with severity and treatment
 - **Climate Risk**: Active threats (frost, heat stress, drought)
 - **Priority Actions**: Top 2-3 immediate steps to take
 
-**Files:**
-- `RAG/hybrib_assess.py` - Hybrid assessment logic
-- `RAG/data/wheat_knowledge_base.json` - Disease/climate data
-- `App/routes/dashboard.py` - Integration into dashboard API
-
 ---
-
-### 6. **Bilingual Chat Assistant**
-
-**How it works:**
-- **LangGraph** orchestrates multi-step reasoning
-- **Tools Available**:
-  - Weather data retrieval
-  - Fertilizer calculation
-  - Irrigation advice
-  - Knowledge base search (RAG)
-- **Language Detection**: Automatically detects Urdu vs English
-- **Context Preservation**: Maintains conversation history in Supabase
-
-**Files:**
-- `RAG/orchestrator.py` - LangGraph agent
-- `agri-tech/src/components/chat/ChatSidebar.tsx` - Chat UI
 
 ---
 
@@ -283,105 +235,6 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
 npm run dev
 ```
 
-### **Database Schema**
-
-Run this SQL in your Supabase SQL Editor:
-
-```sql
--- Users table
-CREATE TABLE signup (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    username TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Farmer profiles
-CREATE TABLE farmer_info (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES signup(id),
-    username TEXT,
-    province TEXT,
-    district TEXT,
-    crop TEXT,
-    stage TEXT,
-    sub_stage TEXT,
-    phone TEXT,
-    area INTEGER,
-    soil_type TEXT,
-    irrigation_type TEXT,
-    crop_start_date DATE,
-    days_after_sowing INTEGER,
-    latitude FLOAT8,
-    longitude FLOAT8,
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Enable pgvector extension for RAG
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- Vector embeddings table
-CREATE TABLE embeddings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    content TEXT,
-    embedding vector(768),
-    metadata JSONB,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
----
-
-## 🔑 Environment Variables
-
-### **Backend (.env)**
-```env
-# Database
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
-
-# Weather APIs
-OPENWEATHER_API_KEY=your_openweather_key
-
-# AI/ML
-GOOGLE_API_KEY=your_gemini_api_key
-
-# Authentication
-JWT_SECRET_KEY=your_secret_key_here
-```
-
-### **Frontend (.env.local)**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_maps_key  # Optional
-```
-
----
-
-## 🧪 Testing
-
-### **Test Disease Prediction**
-```bash
-# Place test images in App/services/test_images/
-# Run prediction service
-python App/services/prediction.py
-```
-
-### **Test Fertilizer Engine**
-```bash
-# Run fertilizer recommendation tests
-python App/data/fertilizer_recommendation.py
-```
-
-### **Test RAG System**
-```bash
-# Run hybrid assessment
-python RAG/hybrib_assess.py
-```
-
----
 
 ## 📊 Technology Stack
 
@@ -488,7 +341,7 @@ This project is licensed under the MIT License.
 - **PARC (Pakistan Agricultural Research Council)** - Fertilizer guidelines
 - **Punjab Agriculture Department** - Crop calendars and best practices
 - **Open-Meteo & OpenWeather** - Weather data APIs
-- **Google Gemini** - AI language model
+- **Grok** - AI language model
 - **Supabase** - Database and vector storage
 
 ---
